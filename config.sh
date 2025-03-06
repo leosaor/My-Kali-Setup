@@ -92,6 +92,27 @@ else
     echo "kali-linux-everything not installed"
 fi
 
+echo "Do you want to disable screen lock, sleep and screensaver? [y/n]"
+read -r response
+if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+    echo "--- Configuring Power Management ---"
+    apt install -y xfce4-power-manager xfce4-screensaver
+    sudo -u kali xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/blank-on-ac -s 0
+    sudo -u kali xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/dpms-on-ac-sleep -s 0
+    sudo -u kali xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/dpms-on-ac-off -s 0
+    sudo -u kali xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-on-ac -s 0
+    sudo -u kali xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lock-screen-suspend-hibernate -s false
+    sudo -u kali xfconf-query -c xfce4-screensaver -p /saver/enabled -s false
+    echo "xset s off && xset -dpms && xset s noblank" | sudo -u kali tee -a /home/kali/.xprofile
+    sed -i 's/^#*HandleLidSwitch=.*/HandleLidSwitch=ignore/' /etc/systemd/logind.conf
+    sed -i 's/^#*IdleAction=.*/IdleAction=ignore/' /etc/systemd/logind.conf
+    sed -i 's/^#*IdleActionSec=.*/IdleActionSec=0/' /etc/systemd/logind.conf
+    systemctl restart systemd-logind
+    echo "--- Power Management Configured ---"
+else
+    echo "Power Management not configured"
+fi
+
 echo "--- leosaor Kali Configuration Complete ---"
 echo "Please reboot the system to apply changes"
 
